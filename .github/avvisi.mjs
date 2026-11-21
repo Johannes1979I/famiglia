@@ -123,11 +123,19 @@ if (cfg.codice) {
   const up = await tg('getUpdates', { timeout: 0, allowed_updates: ['message'] });
   for (const u of up.result || []) {
     const m = u.message; if (!m || !m.text) continue;
-    if (m.text.trim() === '/start ' + cfg.codice && !chat.some(c => c.id === m.chat.id)) {
+    // vale il link dell'app («/start <codice>») ma anche il codice scritto a mano
+    const testo = m.text.trim().replace(/^\/start\s*/, '').trim();
+    const giaDentro = chat.some(c => c.id === m.chat.id);
+    if (testo === cfg.codice && !giaDentro) {
       chat.push({ id: m.chat.id, nome: m.chat.first_name || m.chat.title || 'Telegram' });
       aggiorna.chat = JSON.stringify(chat);
       await tg('sendMessage', { chat_id: m.chat.id, text: `✅ Collegato alla famiglia! Ogni giorno alle ${cfg.ora ?? 7} ti mando qui i promemoria (scadenze, compleanni, scuola, salute…).` });
       console.log('collegata una nuova chat');
+    } else if (giaDentro) {
+      await tg('sendMessage', { chat_id: m.chat.id, text: 'Sei già collegato 👍 I promemoria si cambiano dall\'app, sezione 🔔 Avvisi.' });
+    } else {
+      await tg('sendMessage', { chat_id: m.chat.id, text: 'Ciao! Per collegarti usa il pulsante «📲 Collegami su Telegram» nell\'app della famiglia (sezione 🔔 Avvisi), oppure scrivi qui il codice che trovi lì.' });
+      console.log('messaggio senza codice: risposto con le istruzioni');
     }
   }
   if (up.result && up.result.length) await tg('getUpdates', { offset: up.result[up.result.length - 1].update_id + 1, timeout: 0 });
