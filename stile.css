@@ -1,0 +1,125 @@
+/* ===================== Famiglia — stile comune ===================== */
+:root {
+  /* Tema «casa»: blu petrolio e terracotta su carta calda.
+     La sezione Regali di Natale lo sostituisce con il suo (vedi regali.html). */
+  --sfondo: #f5f1ea;
+  --carta: #ffffff;
+  --testo: #23262b;
+  --tenue: #6c717a;
+  --bordo: #e4ddd2;
+  --primario: #2f5d73;
+  --primario-chiaro: #e3edf1;
+  --accento: #c8643b;
+  --accento-chiaro: #f8e7dd;
+  --rosso: #b3262e;
+  --rosso-chiaro: #fbe7e6;
+  --oro: #b8860b;
+  --oro-chiaro: #fbf1d6;
+  --testata: linear-gradient(135deg, #24495b, #2f5d73 60%, #3b7189);
+  --su-primario: #fff;
+  --ombra: 0 1px 2px rgba(30, 35, 40, .06), 0 4px 14px rgba(30, 35, 40, .05);
+  --raggio: 12px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sfondo: #14181b; --carta: #1c2226; --testo: #e9ecef; --tenue: #9aa3ab; --bordo: #2f383e;
+    --primario: #7fb6cc; --primario-chiaro: #1f3540; --accento: #e58a62; --accento-chiaro: #3b261d;
+    --rosso: #f07a7f; --rosso-chiaro: #3a2223; --oro: #e2b54a; --oro-chiaro: #3a3120;
+    --testata: linear-gradient(135deg, #162d38, #1d3a48 60%, #24495b); --su-primario: #0e1a20;
+    --ombra: 0 1px 2px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--sfondo); color: var(--testo);
+  font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+a { color: var(--primario); }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.tenue { color: var(--tenue); }
+.piccolo { font-size: .85rem; }
+
+/* ---------------- intestazione ---------------- */
+.testa {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--testata); color: #fff;
+  padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+}
+.testa h1 { font-size: 1.15rem; margin: 0; font-weight: 650; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.testa a.indietro { color: #fff; text-decoration: none; font-size: 1.3rem; line-height: 1; padding: 4px 6px; border-radius: 8px; }
+.testa a.indietro:hover { background: rgba(255,255,255,.12); }
+.testa .chi { background: rgba(255,255,255,.14); border: 0; color: #fff; border-radius: 999px; padding: 5px 12px; cursor: pointer; white-space: nowrap; }
+.pillola { font-size: .78rem; border-radius: 999px; padding: 4px 10px; white-space: nowrap; cursor: pointer; background: rgba(255,255,255,.16); }
+.pillola::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: #7be0a6; }
+.pillola.attesa::before { background: #ffd36b; }
+.pillola.ko::before { background: #ff8a8a; }
+
+.pagina { max-width: 1400px; margin: 0 auto; padding: 16px; }
+
+.banner {
+  background: var(--oro-chiaro); border: 1px solid var(--oro); color: var(--testo);
+  border-radius: var(--raggio); padding: 10px 14px; margin-bottom: 14px; font-size: .92rem;
+}
+
+/* ---------------- pulsanti e campi ---------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--bordo); background: var(--carta); border-radius: 10px;
+  padding: 8px 14px; cursor: pointer; text-decoration: none; color: var(--testo); min-height: 38px;
+}
+.btn:hover { border-color: var(--primario); }
+.btn.primario { background: var(--primario); border-color: var(--primario); color: var(--su-primario); }
+.btn.pericolo { color: var(--rosso); border-color: var(--rosso); }
+.btn.piccolo { padding: 4px 10px; min-height: 30px; font-size: .85rem; }
+input[type=text], input[type=search], input[type=url], input[type=date], select, textarea {
+  border: 1px solid var(--bordo); background: var(--carta); border-radius: 9px; padding: 7px 10px; width: 100%;
+}
+input:focus, select:focus, textarea:focus, .btn:focus-visible { outline: 2px solid var(--primario); outline-offset: 1px; }
+.riga-form { display: flex; gap: 8px; }
+.riga-form input { flex: 1; min-width: 0; }
+
+/* ---------------- finestre ---------------- */
+dialog.dlg {
+  border: 0; border-radius: 16px; padding: 0; width: min(480px, calc(100vw - 24px));
+  background: var(--carta); color: var(--testo); box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+dialog.dlg.largo { width: min(640px, calc(100vw - 24px)); }
+dialog.dlg::backdrop { background: rgba(10, 20, 15, .45); }
+.dlg-testa { display: flex; align-items: center; padding: 14px 16px 0; }
+.dlg-testa h2 { font-size: 1.1rem; margin: 0; flex: 1; }
+.dlg-testa .x { border: 0; background: none; font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--tenue); padding: 0 4px; }
+.dlg-corpo { padding: 10px 16px; max-height: 70vh; overflow: auto; }
+.dlg-corpo hr { border: 0; border-top: 1px solid var(--bordo); margin: 16px 0; }
+.dlg-piede { display: flex; justify-content: flex-end; gap: 8px; padding: 0 16px 16px; flex-wrap: wrap; }
+.dlg-piede:empty { display: none; }
+.scelte { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.scelta { min-width: 110px; }
+.campo { display: block; margin: 0 0 12px; }
+.campo > span { display: block; font-size: .82rem; color: var(--tenue); margin-bottom: 4px; }
+.invito { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.invito .qr { width: 180px; height: 180px; flex: 0 0 auto; background: #fff; border-radius: 10px; padding: 6px; border: 1px solid var(--bordo); }
+.invito .qr svg { width: 100%; height: 100%; display: block; }
+.invito-azioni { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------------- avvisi ---------------- */
+#avvisi { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; width: min(440px, calc(100vw - 32px)); pointer-events: none; }
+.avviso { background: #22302a; color: #fff; padding: 10px 14px; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.25); transition: opacity .4s, transform .4s; font-size: .92rem; }
+.avviso.ko { background: var(--rosso); }
+.avviso.via { opacity: 0; transform: translateY(8px); }
+
+/* ---------------- home (riquadri) ---------------- */
+.riquadri { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.riquadro {
+  display: block; background: var(--carta); border: 1px solid var(--bordo); border-radius: 16px;
+  padding: 18px; text-decoration: none; color: var(--testo); box-shadow: var(--ombra);
+}
+.riquadro:hover { border-color: var(--primario); }
+.riquadro .ico { font-size: 2rem; }
+.riquadro h2 { margin: 6px 0 4px; font-size: 1.1rem; }
+.riquadro p { margin: 0; color: var(--tenue); font-size: .9rem; }

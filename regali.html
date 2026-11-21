@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1f5c3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Regali">
+<link rel="icon" href="icona-regali.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icona-regali-180.png">
+<title>Regali di Natale</title>
+<link rel="stylesheet" href="stile.css">
+<style>
+/* =================== TEMA NATALIZIO (solo liste di Natale) =================== */
+body.tema-natale {
+  --sfondo: #fbf5ec; --carta: #fffdf8; --testo: #2b201b; --tenue: #7a6a5e; --bordo: #eddcc5;
+  --primario: #1e6b45; --primario-chiaro: #e3f1e7; --accento: #c0262f; --accento-chiaro: #fbe5e3;
+  --rosso: #c0262f; --rosso-chiaro: #fbe5e3; --oro: #b8901c; --oro-chiaro: #fbf0cf; --su-primario: #fff;
+  --testata: linear-gradient(135deg, #7d1219, #b51f2a 55%, #c9352f);
+  --testata-tabella: #1e6b45; --su-testata-tabella: #fdf6e3;
+  background-color: var(--sfondo);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cg stroke='%23b8901c' stroke-opacity='.30' stroke-width='1.3' stroke-linecap='round' fill='none'%3E%3Cpath transform='translate(32 36)' d='M-8 0H8M-4-6.9L4 6.9M-4 6.9L4-6.9'/%3E%3Cpath transform='translate(108 104) scale(.65)' d='M-8 0H8M-4-6.9L4 6.9M-4 6.9L4-6.9'/%3E%3C/g%3E%3Cg fill='%23c0262f' fill-opacity='.16'%3E%3Ccircle cx='110' cy='34' r='2.2'/%3E%3Ccircle cx='40' cy='116' r='1.7'/%3E%3C/g%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body.tema-natale {
+    --sfondo: #0e1915; --carta: #16241f; --testo: #f3ece2; --tenue: #a99d90; --bordo: #2b3f36;
+    --primario: #6fcf97; --primario-chiaro: #1b3a2a; --accento: #ff7b7b; --accento-chiaro: #3a2022;
+    --rosso: #ff7b7b; --rosso-chiaro: #3a2022; --oro: #e8c35a; --oro-chiaro: #3a3019; --su-primario: #0b1a12;
+    --testata: linear-gradient(135deg, #4d0d12, #7d1219 55%, #8f1820);
+    --testata-tabella: #1b3a2a; --su-testata-tabella: #e8c35a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cg stroke='%23ffffff' stroke-opacity='.07' stroke-width='1.3' stroke-linecap='round' fill='none'%3E%3Cpath transform='translate(32 36)' d='M-8 0H8M-4-6.9L4 6.9M-4 6.9L4-6.9'/%3E%3Cpath transform='translate(108 104) scale(.65)' d='M-8 0H8M-4-6.9L4 6.9M-4 6.9L4-6.9'/%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+/* neve che scende nella testata e fila di lucine sotto */
+.testa .neve, .testa .lucine { display: none; }
+body.tema-natale .testa { padding-bottom: 20px; overflow: hidden; }
+body.tema-natale .testa > *:not(.neve):not(.lucine) { position: relative; z-index: 1; }
+body.tema-natale .testa h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-size: 1.3rem; letter-spacing: .01em; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+body.tema-natale .testa .neve {
+  display: block; position: absolute; inset: 0; pointer-events: none; opacity: .6;
+  background-image: radial-gradient(circle, #fff 1.3px, transparent 1.8px), radial-gradient(circle, #fff .8px, transparent 1.3px);
+  background-size: 48px 48px, 29px 29px; background-position: 0 0, 13px 7px;
+  animation: neve 10s linear infinite;
+}
+@keyframes neve { to { background-position: 0 48px, 13px 36px; } }
+body.tema-natale .testa .lucine {
+  display: block; position: absolute; left: 0; right: 0; bottom: 3px; height: 12px; pointer-events: none;
+  background:
+    radial-gradient(circle at 10px 7px, #ffd54a 3.2px, transparent 4.2px),
+    radial-gradient(circle at 30px 7px, #7be0a6 3.2px, transparent 4.2px),
+    radial-gradient(circle at 50px 7px, #fff3e0 3.2px, transparent 4.2px),
+    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)) 0 3px / 100% 1px no-repeat;
+  background-size: 60px 12px, 60px 12px, 60px 12px, 100% 1px;
+  animation: lucine 1.6s steps(2) infinite;
+}
+@keyframes lucine { 50% { filter: brightness(.65) saturate(.7); } }
+@media (prefers-reduced-motion: reduce) { body.tema-natale .testa .neve, body.tema-natale .testa .lucine { animation: none; } }
+body.tema-natale .cifra { border-top: 3px solid var(--oro); }
+body.tema-natale .cifra.fatti { border-top-color: var(--primario); }
+body.tema-natale .cifra.manca { border-top-color: var(--rosso); }
+body.tema-natale .chip[aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
+body.tema-natale .riga.intestazione { background: var(--testata-tabella); color: var(--su-testata-tabella); }
+body.tema-natale .riga.fatto { background: linear-gradient(90deg, var(--primario-chiaro), var(--oro-chiaro) 45%, transparent 75%); }
+body.tema-natale .tabella, body.tema-natale .riga { border-color: var(--bordo); }
+@media (max-width: 860px) { body.tema-natale .riga { border-top: 3px solid var(--rosso); } body.tema-natale .riga.fatto { border-top-color: var(--primario); } }
+body.tema-natale .btn.primario { background: var(--rosso); border-color: var(--rosso); }
+
+/* ---------- riepilogo ---------- */
+.riepilogo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.cifra { position: relative; background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 10px 14px; box-shadow: var(--ombra); }
+.cifra b { display: block; font-size: 1.45rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.cifra span { font-size: .8rem; color: var(--tenue); }
+.cifra .ico { position: absolute; top: 8px; right: 10px; font-size: 1.1rem; font-style: normal; opacity: .85; }
+.cifra.fatti b { color: var(--primario); }
+.cifra.manca b { color: var(--rosso); }
+.barra { height: 6px; background: var(--primario-chiaro); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.barra i { display: block; height: 100%; background: var(--primario); width: 0; transition: width .4s; }
+.barra.sopra i { background: var(--rosso); }
+
+/* ---------- barra strumenti ---------- */
+.strumenti { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.strumenti .cerca { flex: 1 1 200px; max-width: 320px; }
+.filtri { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--bordo); background: var(--carta); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: .88rem; }
+.chip[aria-pressed="true"] { background: var(--primario); border-color: var(--primario); color: var(--su-primario); }
+.chip .n { opacity: .7; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.spinta { margin-left: auto; display: flex; gap: 8px; }
+.menu-pop { position: relative; }
+.menu-pop .tendina { position: absolute; right: 0; top: calc(100% + 6px); background: var(--carta); border: 1px solid var(--bordo); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,.16); padding: 6px; min-width: 230px; z-index: 30; display: flex; flex-direction: column; }
+.menu-pop .tendina button { text-align: left; border: 0; background: none; padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+.menu-pop .tendina button:hover { background: var(--primario-chiaro); }
+.selettore-lista { font-weight: 600; width: auto; max-width: 240px; }
+
+/* ---------- tabella ---------- */
+.tabella { background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); box-shadow: var(--ombra); overflow: hidden; }
+.riga {
+  display: grid; align-items: start; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--bordo);
+  grid-template-columns: 40px minmax(120px, 1.1fr) minmax(150px, 1.6fr) minmax(130px, 1.3fr) minmax(130px, 1.2fr) 82px 82px 118px 40px 36px;
+}
+.riga.intestazione { border-top: 0; background: var(--primario-chiaro); font-size: .78rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--primario); padding-top: 10px; padding-bottom: 10px; position: sticky; top: 0; }
+.riga.intestazione > div { align-self: center; }
+.riga .c-fatto { display: flex; justify-content: center; padding-top: 6px; }
+.riga input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--primario); cursor: pointer; margin: 0; }
+.riga input.testo, .riga textarea, .riga select {
+  border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 5px 7px; width: 100%; resize: none; overflow: hidden; min-height: 32px; line-height: 1.35;
+}
+.riga input.testo:hover, .riga textarea:hover, .riga select:hover { border-color: var(--bordo); }
+.riga input.testo:focus, .riga textarea:focus, .riga select:focus { border-color: var(--primario); background: var(--carta); outline: none; }
+.riga .nome { font-weight: 600; }
+.riga .num { text-align: right; font-variant-numeric: tabular-nums; }
+.riga select { appearance: none; -webkit-appearance: none; color: var(--tenue); cursor: pointer; }
+.riga select.scelto { color: var(--testo); }
+.riga .c-fiocco button, .riga .c-menu button { border: 0; background: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 8px; line-height: 1; opacity: .35; filter: grayscale(1); }
+.riga .c-menu button { opacity: .6; filter: none; font-weight: 700; }
+.riga .c-fiocco button[aria-pressed="true"] { opacity: 1; filter: none; }
+.riga .c-fiocco button:hover, .riga .c-menu button:hover { background: var(--primario-chiaro); opacity: 1; }
+.riga.fatto { background: linear-gradient(90deg, var(--primario-chiaro), transparent 60%); }
+.riga.fatto .nome { color: var(--primario); }
+.riga .segni { grid-column: 2 / -1; font-size: .75rem; color: var(--tenue); margin-top: -6px; padding-left: 7px; display: flex; gap: 12px; flex-wrap: wrap; }
+.riga .segni:empty { display: none; }
+.riga .segni .nasc { color: var(--oro); }
+.riga.lampo { animation: lampo 2.5s ease-out; }
+@keyframes lampo { 0% { background: var(--oro-chiaro); } 100% { background: transparent; } }
+@media (min-width: 861px) {
+  /* su schermo grande i suggerimenti compaiono solo sulla riga sotto il mouse: niente muro di testo grigio */
+  .riga textarea::placeholder, .riga input.testo::placeholder { color: transparent; }
+  .riga:hover textarea::placeholder, .riga:hover input.testo::placeholder,
+  .riga :focus::placeholder { color: var(--tenue); opacity: .7; }
+}
+.vuoto { padding: 28px; text-align: center; color: var(--tenue); }
+
+.aggiungi { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--bordo); background: var(--sfondo); }
+.aggiungi input { flex: 1; max-width: 360px; }
+
+.piede-pagina { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; margin-top: 12px; font-size: .82rem; color: var(--tenue); }
+
+/* ---------- telefono: ogni riga diventa una scheda ---------- */
+@media (max-width: 860px) {
+  .pagina { padding: 12px; }
+  .riga.intestazione { display: none; }
+  .tabella { background: none; border: 0; box-shadow: none; overflow: visible; }
+  .riga {
+    background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); box-shadow: var(--ombra);
+    margin-bottom: 10px; padding: 10px 10px 12px; gap: 4px 8px;
+    grid-template-columns: 36px 1fr 1fr 1fr 40px 36px;
+    grid-template-areas:
+      "fatto nome nome nome fiocco menu"
+      "idee idee idee idee idee idee"
+      "regalo regalo regalo regalo regalo regalo"
+      "dafare dafare dafare dafare dafare dafare"
+      "budget budget speso speso chi chi"
+      "segni segni segni segni segni segni";
+  }
+  .riga .c-fatto { grid-area: fatto; padding-top: 5px; }
+  .riga .c-nome { grid-area: nome; }
+  .riga .c-idee { grid-area: idee; }
+  .riga .c-regalo { grid-area: regalo; }
+  .riga .c-dafare { grid-area: dafare; }
+  .riga .c-budget { grid-area: budget; }
+  .riga .c-speso { grid-area: speso; }
+  .riga .c-chi { grid-area: chi; }
+  .riga .c-fiocco { grid-area: fiocco; }
+  .riga .c-menu { grid-area: menu; }
+  .riga .segni { grid-area: segni; margin-top: 2px; }
+  .riga .nome { font-size: 1.05rem; }
+  .riga [data-etichetta]::before { content: attr(data-etichetta); display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tenue); padding: 0 7px; }
+  .riga .c-nome::before, .riga .c-fatto::before, .riga .c-fiocco::before, .riga .c-menu::before { display: none !important; }
+  .riga .num { text-align: left; }
+  .aggiungi { border: 1px dashed var(--bordo); border-radius: var(--raggio); }
+  .aggiungi input { max-width: none; }
+  .spinta { margin-left: 0; }
+  .strumenti .cerca { max-width: none; }
+  .testa .pillola { font-size: 0; padding: 8px; }
+  .testa h1 .pre { display: none; }
+  .testa .pillola::before { margin: 0; width: 10px; height: 10px; }
+  .riepilogo { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .cifra { padding: 7px 9px; }
+  .cifra b { font-size: 1.1rem; }
+  .cifra span { font-size: .72rem; display: block; line-height: 1.2; }
+}
+
+/* ---------- stampa ---------- */
+#stampa { display: none; }
+@media print {
+  body { background: #fff; color: #000; }
+  body > *:not(#stampa) { display: none !important; }
+  #stampa { display: block; font-size: 10.5pt; }
+  #stampa h1 { font-size: 15pt; margin: 0 0 4pt; }
+  #stampa p { margin: 0 0 8pt; color: #444; }
+  #stampa table { width: 100%; border-collapse: collapse; }
+  #stampa th, #stampa td { border: 1px solid #999; padding: 4pt 5pt; vertical-align: top; text-align: left; }
+  #stampa th { background: #eee; font-size: 9pt; }
+  #stampa td.n { text-align: right; white-space: nowrap; }
+  #stampa tr { break-inside: avoid; }
+  @page { size: A4 landscape; margin: 12mm; }
+}
+</style>
+</head>
+<body class="tema-natale">
+<header class="testa">
+  <div class="neve" aria-hidden="true"></div><div class="lucine" aria-hidden="true"></div>
+  <a class="indietro" id="indietro" href="index.html" aria-label="Torna alla home" title="Home">‹</a>
+  <h1 id="titolo">🎄 Regali di Natale</h1>
+  <span class="pillola ok" id="pillola">Salvato</span>
+  <button type="button" class="chi" id="chi" title="Cambia persona">…</button>
+</header>
+
+<main class="pagina">
+  <div class="banner" id="bannerCloud" hidden>
+    <b>Il salvataggio condiviso non è ancora attivo.</b>
+    Tutto quello che scrivi resta su questo dispositivo e parte da solo appena il cloud si attiva
+    (su Firebase manca la regola per la sezione «famiglia»).
+  </div>
+
+  <section class="riepilogo" id="riepilogo" aria-label="Riepilogo"></section>
+
+  <div class="strumenti">
+    <select id="lista" class="selettore-lista" aria-label="Lista" hidden></select>
+    <input type="search" id="cerca" class="cerca" placeholder="Cerca un nome o un'idea…" aria-label="Cerca">
+    <div class="filtri" id="filtri" role="group" aria-label="Filtri"></div>
+    <div class="spinta">
+      <button type="button" class="btn" id="btnInvita">👥 Invita</button>
+      <div class="menu-pop">
+        <button type="button" class="btn" id="btnAltro" aria-haspopup="true" aria-expanded="false">Altro ▾</button>
+        <div class="tendina" id="tendina" hidden>
+          <button type="button" data-az="modifiche">🕘 Ultime modifiche</button>
+          <button type="button" data-az="stampa">🖨️ Stampa la lista</button>
+          <button type="button" data-az="csv">📊 Scarica per Excel</button>
+          <button type="button" data-az="ordina">↕️ Ordina dalla A alla Z</button>
+          <button type="button" data-az="nuovaLista">➕ Nuova lista (altro anno, compleanno…)</button>
+          <button type="button" data-az="rinominaLista">✏️ Rinomina questa lista</button>
+          <button type="button" data-az="cestino">🗑️ Cestino</button>
+          <button type="button" data-az="aggiorna">🔄 Aggiorna adesso</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabella" id="tabella">
+    <div class="riga intestazione" aria-hidden="true">
+      <div title="Regalo fatto">Fatto</div><div>Nome</div><div>Proposte / idee</div><div>Regalo scelto</div>
+      <div>Da fare</div><div style="text-align:right">Budget</div><div style="text-align:right">Speso</div>
+      <div>A cura di</div><div title="Incartato">🎀</div><div></div>
+    </div>
+    <div id="righe"></div>
+    <div class="vuoto" id="vuoto" hidden></div>
+    <form class="aggiungi" id="formAggiungi">
+      <input type="text" id="nuovoNome" placeholder="Aggiungi una persona…" maxlength="60" aria-label="Nome della persona da aggiungere">
+      <button class="btn primario">Aggiungi</button>
+    </form>
+  </div>
+
+  <div class="piede-pagina">
+    <span id="ultimaMod"></span>
+    <span>Si salva da solo · 🎀 = incartato · ⋯ = link, note, «nascondi a»</span>
+  </div>
+</main>
+
+<div id="stampa"></div>
+
+<script src="qr.js"></script>
+<script src="famiglia.js"></script>
+<script src="regali.js"></script>
+</body>
+</html>

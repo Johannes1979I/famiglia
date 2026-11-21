@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1f5c3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Famiglia">
+<link rel="icon" href="icona.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icona-180.png">
+<title>Famiglia</title>
+<link rel="stylesheet" href="stile.css">
+<style>
+  .saluto { margin: 4px 0 18px; }
+  .saluto h2 { margin: 0; font-size: 1.4rem; }
+  .riquadro .stato { margin-top: 10px; font-size: .85rem; color: var(--primario); font-weight: 600; }
+  .riquadro.natale { background: linear-gradient(135deg, #7d1219, #b51f2a 60%, #c9352f); color: #fff; border-color: transparent; position: relative; overflow: hidden; }
+  .riquadro.natale p { color: rgba(255,255,255,.85); }
+  .riquadro.natale .stato { color: #ffd54a; }
+  .riquadro.natale h2 { font-family: Georgia, "Times New Roman", serif; }
+  .riquadro.natale::after { content: "❄"; position: absolute; right: -6px; bottom: -22px; font-size: 6rem; opacity: .12; }
+  .saluto h2 { color: var(--primario); }
+  .saluto p { border-left: 3px solid var(--accento); padding-left: 8px; }
+  .azioni-home { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+</style>
+</head>
+<body>
+<header class="testa">
+  <h1>🏡 Famiglia</h1>
+  <span class="pillola ok" id="pillola">Salvato</span>
+  <button type="button" class="chi" id="chi">…</button>
+</header>
+<main class="pagina">
+  <div class="banner" id="bannerCloud" hidden>
+    <b>Il salvataggio condiviso non è ancora attivo.</b> Quello che scrivi resta su questo dispositivo e parte appena il cloud si attiva.
+  </div>
+  <div class="saluto"><h2 id="saluto">Ciao</h2><p class="tenue" style="margin:6px 0 0">Le cose di casa, in comune.</p></div>
+  <div class="riquadri">
+    <a class="riquadro natale" href="regali.html" id="vaiRegali">
+      <div class="ico">🎄</div>
+      <h2>Regali</h2>
+      <p>Natale e ogni occasione: chi, cosa, quanto, chi se ne occupa.</p>
+      <div class="stato" id="statoRegali"></div>
+    </a>
+  </div>
+  <div class="azioni-home">
+    <button type="button" class="btn" id="btnInvita">👥 Invita in famiglia</button>
+  </div>
+</main>
+<script src="qr.js"></script>
+<script src="famiglia.js"></script>
+<script>
+Fam.avvio(function () {
+  var R = Fam.raccolta('regali'), L = Fam.raccolta('liste');
+  Fam.pillolaStato(document.getElementById('pillola'));
+  function disegna() {
+    var ora = new Date().getHours();
+    document.getElementById('saluto').textContent = (ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera') + (Fam.io() ? ', ' + Fam.io() : '');
+    document.getElementById('chi').textContent = '👤 ' + (Fam.io() || 'Chi sei?');
+    var liste = L.tutte().filter(function (l) { return !l.eliminato && l.titolo; })
+      .sort(function (a, b) { return String(b.data || '').localeCompare(String(a.data || '')); });
+    var l = liste[0], me = Fam.io();
+    if (!l) { document.getElementById('statoRegali').textContent = ''; return; }
+    var righe = R.tutte().filter(function (r) { return r.lista === l.id && !r.eliminato && r.nascostoA !== me; });
+    var fatti = righe.filter(function (r) { return r.fatto; }).length;
+    document.getElementById('statoRegali').textContent = l.titolo + ': ' + fatti + (fatti === 1 ? ' fatto' : ' fatti') + ' su ' + righe.length;
+  }
+  document.getElementById('chi').addEventListener('click', function () { Fam.chiediChiSei(false, disegna); });
+  document.getElementById('btnInvita').addEventListener('click', Fam.invita);
+  // il link verso i regali porta con sé la chiave, così funziona anche da «Aggiungi a Home»
+  document.getElementById('vaiRegali').href = 'regali.html' + location.search + '#k=' + Fam.chiave;
+  R.su(disegna); L.su(disegna); Fam.su(function (t) { if (t === 'io') disegna(); });
+  disegna();
+  R.sincronizza(); L.sincronizza();
+});
+</script>
+</body>
+</html>
