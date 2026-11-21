@@ -38,6 +38,26 @@
   }
   function fmtNum(n) { return (n === null || n === undefined || n === '') ? '' : String(Math.round(n * 100) / 100).replace('.', ','); }
   function euro(n) { return EUR.format(n).replace(',00', ''); }
+  /* Tutti i link scritti nelle proposte, nel regalo scelto, nel «da fare»,
+     nelle note e nel campo link: diventano pulsanti cliccabili sotto la riga. */
+  var RE_LINK = /(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+  function linkDi(r) {
+    var visti = {}, out = [];
+    ['idee', 'regalo', 'dafare', 'note', 'link'].forEach(function (k) {
+      var t = String(r[k] || '');
+      if (k === 'link' && t && !RE_LINK.test(t)) t = 'https://' + t;
+      RE_LINK.lastIndex = 0;
+      (t.match(RE_LINK) || []).forEach(function (u) {
+        u = u.replace(/[).,;:!?»]+$/, '');
+        var url = /^https?:\/\//i.test(u) ? u : 'https://' + u;
+        try { var nome = new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return; }
+        if (visti[url]) return; visti[url] = 1;
+        var stessi = out.filter(function (x) { return x.nome.indexOf(nome) === 0; }).length;
+        out.push({ url: url, nome: stessi ? nome + ' (' + (stessi + 1) + ')' : nome });
+      });
+    });
+    return out;
+  }
   function attesa(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   Fam.avvio(function (info, p) {
@@ -146,7 +166,7 @@
       var el = h('div', { class: 'riga', 'data-id': id },
         h('div', { class: 'c-fatto' }, c.fatto),
         testo('nome', 'input', 'Nome', null, 'testo nome'),
-        testo('idee', 'textarea', 'Idee, proposte…', 'Proposte / idee'),
+        testo('idee', 'textarea', 'Idee, proposte… (anche link)', 'Proposte / idee'),
         testo('regalo', 'textarea', 'Cosa gli regaliamo', 'Regalo scelto'),
         testo('dafare', 'textarea', 'Es. ordinare, ritirare…', 'Da fare'),
         testo('budget', 'input', 'Budget €', 'Budget', 'testo num'),
@@ -173,7 +193,9 @@
       n.el.classList.toggle('fatto', !!r.fatto);
       svuota(n.segni);
       if (r.nascostoA) n.segni.appendChild(h('span', { class: 'nasc', text: '🙈 nascosto a ' + r.nascostoA }));
-      if (piena(r.link)) n.segni.appendChild(h('a', { href: /^https?:\/\//i.test(r.link) ? r.link : 'https://' + r.link, target: '_blank', rel: 'noopener noreferrer', text: '🔗 link' }));
+      linkDi(r).forEach(function (l) {
+        n.segni.appendChild(h('a', { class: 'link-proposta', href: l.url, target: '_blank', rel: 'noopener noreferrer', title: l.url, text: '🔗 ' + l.nome }));
+      });
       if (piena(r.note)) n.segni.appendChild(h('span', { text: '📝 ' + String(r.note).slice(0, 80) + (String(r.note).length > 80 ? '…' : '') }));
       if (r.modDa && r.modDa !== Fam.io()) n.segni.appendChild(h('span', { text: '✎ ' + r.modDa + ', ' + Fam.quando(r.modIl) }));
     }
@@ -433,7 +455,7 @@
         riempi();
         d = Fam.dialogo('Cestino · ' + ((listaCorrente() || {}).titolo || ''), box);
       },
-      aggiorna: function () { Fam.sincronizzaTutto().then(function () { Fam.avviso('Lista aggiornata'); }); }
+      aggiorna: function () { Fam.sincronizzaTutto(true).then(function () { Fam.avviso('Lista aggiornata'); }); }
     };
 
     /* -------------------------------------------------- collegamenti */

@@ -171,6 +171,26 @@
     return chiama('PATCH', percorso, q, { fields: fields });
   }
 
+  /* Il documento della famiglia (famiglia/<chiave>) tiene, per ogni
+     raccolta, l'ora dell'ultima scrittura (v_regali, v_spesa…). Prima di
+     rileggere una raccolta intera si legge solo lui: 1 lettura invece di
+     decine, così la quota gratuita di Firestore basta e avanza. */
+  var infoPromessa = null, infoQuando = 0;
+  function leggiInfo() {
+    if (infoPromessa && Date.now() - infoQuando < 2500) return infoPromessa;
+    infoQuando = Date.now();
+    infoPromessa = chiama('GET', '', '').then(daDoc, function (e) {
+      if (e && e.status === 404) return {};
+      throw e;
+    });
+    return infoPromessa;
+  }
+  function segnaVersione(nome) {
+    var c = {}; c['v_' + nome] = new Date().toISOString();
+    infoPromessa = null;
+    return salva('', c);
+  }
+
   /* Server finto per il banco di prova (?prova=1): sta nel localStorage,
      così due schede aperte si comportano come due telefoni. */
   var Finto = {
@@ -180,7 +200,9 @@
         setTimeout(function () {
           if (ls('fam_finto_spento') === '1') return ko(new TypeError('Failed to fetch'));
           if (ls('fam_finto_negato') === '1') return ko(errore('Missing or insufficient permissions.', 403));
-          var db = Finto.db(), pre = K + '/' + percorso;
+          var db = Finto.db(), pre = K + (percorso ? '/' + percorso : '');
+          if (metodo === 'GET' && db[pre]) return ok(db[pre]);
+          if (metodo === 'GET' && !percorso) return ko(errore('not found', 404));
           if (metodo === 'GET') {
             var docs = Object.keys(db).filter(function (p) {
               return p.indexOf(pre + '/') === 0 && p.slice(pre.length + 1).indexOf('/') < 0;
@@ -219,6 +241,7 @@
     this.righe = c.righe || {};
     this.sporchi = c.sporchi || {};
     this.ultimaVista = c.ultimaVista || '';
+    this.versione = c.versione || '';
     this.sincronizzata = false;     // almeno una lettura dal cloud riuscita
     this.ascoltatori = [];
     this._timer = null;
@@ -230,7 +253,7 @@
     this.ascoltatori.forEach(function (fn) { fn(tipo, dati, self); });
   };
   Raccolta.prototype._registra = function () {
-    ls(this.chiaveLS, JSON.stringify({ righe: this.righe, sporchi: this.sporchi, ultimaVista: this.ultimaVista }));
+    ls(this.chiaveLS, JSON.stringify({ righe: this.righe, sporchi: this.sporchi, ultimaVista: this.ultimaVista, versione: this.versione }));
   };
   Raccolta.prototype.tutte = function () {
     var r = this.righe;
@@ -267,6 +290,7 @@
   Raccolta.prototype._spingi = function () {
     var self = this;
     var ids = Object.keys(this.sporchi);
+    if (!ids.length) return Promise.resolve();
     return ids.reduce(function (p, id) {
       return p.then(function () {
         var s = self.sporchi[id], r = self.righe[id];
@@ -284,18 +308,24 @@
           self._registra();
         });
       });
-    }, Promise.resolve());
+    }, Promise.resolve()).then(function () { return segnaVersione(self.nome); });
   };
 
-  Raccolta.prototype.sincronizza = function () {
-    var self = this;
+  Raccolta.prototype.sincronizza = function (forza) {
+    var self = this, versione = '';
     if (this._inCorso) { this._ancora = true; return this._inCorso; }
     clearTimeout(this._timer);
     this.stato = 'salvo';
     emettiGlobale('stato');
     this._inCorso = this._spingi().then(function () {
+      return leggiInfo();
+    }).then(function (info) {
+      versione = info['v_' + self.nome] || '';
+      if (!forza && self.sincronizzata && versione === self.versione) return null;   // niente di nuovo
       return elenca(self.nome);
     }).then(function (remoti) {
+      if (remoti === null) { self.stato = 'ok'; self.errore = null; return; }
+      self.versione = versione;
       var visti = {}, novita = [], soglia = self.ultimaVista, massimo = soglia, cambiato = false;
       remoti.forEach(function (rr) {
         visti[rr.id] = true;
@@ -334,8 +364,8 @@
   function raccolta(nome) {
     return raccolte[nome] || (raccolte[nome] = new Raccolta(nome));
   }
-  function sincronizzaTutto() {
-    return Promise.all(Object.keys(raccolte).map(function (n) { return raccolte[n].sincronizza(); }));
+  function sincronizzaTutto(forza) {
+    return Promise.all(Object.keys(raccolte).map(function (n) { return raccolte[n].sincronizza(forza === true); }));
   }
   function statoGenerale() {
     var st = 'ok', attesa = 0, n;
@@ -352,7 +382,7 @@
   var giroAvviato = false;
   function avviaGiro() {
     if (giroAvviato) return; giroAvviato = true;
-    setInterval(function () { if (!document.hidden) sincronizzaTutto(); }, 15000);
+    setInterval(function () { if (!document.hidden) sincronizzaTutto(); }, 20000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) sincronizzaTutto(); });
     G.addEventListener('focus', sincronizzaTutto);
     G.addEventListener('online', sincronizzaTutto);
@@ -369,6 +399,41 @@
     if (!nome) return;
     var id = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || nuovoId();
     if (!raccolta('membri').prendi(id)) raccolta('membri').imposta(id, { nome: nome });
+  }
+
+  /* Persone della famiglia: chi usa l'app (membri) più chi non la usa
+     (i figli, i nonni…), che si aggiungono da «Componenti della famiglia». */
+  function persone() {
+    var visti = {}, out = [];
+    membri().concat(raccolta('persone').tutte().filter(function (p) { return !p.eliminato && p.nome; })
+      .sort(function (a, b) { return (a.creatoIl || '').localeCompare(b.creatoIl || ''); })
+      .map(function (p) { return p.nome; }))
+      .forEach(function (n) { if (!visti[n]) { visti[n] = 1; out.push(n); } });
+    return out;
+  }
+  function gestisciPersone(poi) {
+    var P = raccolta('persone'), box = h('div');
+    function disegna() {
+      svuota(box);
+      membri().forEach(function (n) {
+        box.appendChild(h('div', { class: 'riga-persona' }, h('span', { text: '👤 ' + n }), h('span', { class: 'tenue piccolo', text: 'usa l\'app' })));
+      });
+      P.tutte().filter(function (p) { return !p.eliminato && p.nome; }).forEach(function (p) {
+        box.appendChild(h('div', { class: 'riga-persona' }, h('span', { text: '🧒 ' + p.nome }),
+          h('button', { type: 'button', class: 'btn piccolo', text: 'Togli', onclick: function () { P.imposta(p.id, { eliminato: true }, 'eliminato'); disegna(); } })));
+      });
+    }
+    var campo = h('input', { type: 'text', placeholder: 'Nome (es. un figlio, un nonno)', maxlength: 40 });
+    disegna();
+    dialogo('Componenti della famiglia', [
+      h('p', { class: 'tenue', text: 'Compaiono nelle scelte «per chi» di salute, scuola, viaggi e spese. Chi usa l\'app si aggiunge da solo al primo accesso.' }),
+      box,
+      h('form', { class: 'riga-form', style: 'margin-top:12px', onsubmit: function (e) {
+        e.preventDefault(); var n = campo.value.trim(); if (!n) return;
+        if (persone().indexOf(n) < 0) P.nuova({ nome: n });
+        campo.value = ''; disegna();
+      } }, campo, h('button', { class: 'btn primario', text: 'Aggiungi' }))
+    ], null, { allaChiusura: poi });
   }
 
   /* ------------------------------------------------------- interfaccia */
@@ -546,6 +611,7 @@
     h: h, svuota: svuota, ls: ls, lsJson: lsJson,
     avvio: avvio, raccolta: raccolta, sincronizzaTutto: sincronizzaTutto, statoGenerale: statoGenerale,
     io: io, impostaIo: impostaIo, membri: membri, aggiungiMembro: aggiungiMembro,
+    persone: persone, gestisciPersone: gestisciPersone,
     chiediChiSei: chiediChiSei, invita: invita, dialogo: dialogo, avviso: avviso, quando: quando,
     pillolaStato: pillolaStato, su: suGlobale, scriviHash: scriviHash, linkInvito: linkInvito,
     nuovoId: nuovoId, prova: PROVA,

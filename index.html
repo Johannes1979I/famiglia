@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#1f5c3f">
+<meta name="theme-color" content="#2f5d73">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Famiglia">
 <link rel="icon" href="icona.svg" type="image/svg+xml">
@@ -14,16 +14,21 @@
 <link rel="stylesheet" href="stile.css">
 <style>
   .saluto { margin: 4px 0 18px; }
-  .saluto h2 { margin: 0; font-size: 1.4rem; }
-  .riquadro .stato { margin-top: 10px; font-size: .85rem; color: var(--primario); font-weight: 600; }
-  .riquadro.natale { background: linear-gradient(135deg, #7d1219, #b51f2a 60%, #c9352f); color: #fff; border-color: transparent; position: relative; overflow: hidden; }
+  .saluto h2 { margin: 0; font-size: 1.4rem; color: var(--primario); }
+  .saluto p { margin: 6px 0 0; border-left: 3px solid var(--accento); padding-left: 8px; color: var(--tenue); }
+  .riquadri { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .riquadro .ico { font-size: 1.8rem; }
+  .riquadro.natale { background: linear-gradient(135deg, #7d1219, #b51f2a 60%, #c9352f); color: #fff; border-color: transparent; border-top-color: #e8c35a; overflow: hidden; }
   .riquadro.natale p { color: rgba(255,255,255,.85); }
   .riquadro.natale .stato { color: #ffd54a; }
   .riquadro.natale h2 { font-family: Georgia, "Times New Roman", serif; }
-  .riquadro.natale::after { content: "❄"; position: absolute; right: -6px; bottom: -22px; font-size: 6rem; opacity: .12; }
-  .saluto h2 { color: var(--primario); }
-  .saluto p { border-left: 3px solid var(--accento); padding-left: 8px; }
+  .riquadro.natale::before { content: "❄"; position: absolute; right: -6px; bottom: -22px; font-size: 6rem; opacity: .12; }
   .azioni-home { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+  @media (max-width: 700px) {
+    .riquadri { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .riquadro { padding: 12px; } .riquadro p { display: none; } .riquadro h2 { font-size: 1rem; }
+    .riquadro .stato { margin-top: 4px; font-size: .78rem; }
+  }
 </style>
 </head>
 <body>
@@ -34,46 +39,86 @@
 </header>
 <main class="pagina">
   <div class="banner" id="bannerCloud" hidden>
-    <b>Il salvataggio condiviso non è ancora attivo.</b> Quello che scrivi resta su questo dispositivo e parte appena il cloud si attiva.
+    <b>Il salvataggio condiviso non è attivo in questo momento.</b> Quello che scrivi resta su questo dispositivo e parte appena il cloud risponde.
   </div>
-  <div class="saluto"><h2 id="saluto">Ciao</h2><p class="tenue" style="margin:6px 0 0">Le cose di casa, in comune.</p></div>
-  <div class="riquadri">
-    <a class="riquadro natale" href="regali.html" id="vaiRegali">
-      <div class="ico">🎄</div>
-      <h2>Regali</h2>
-      <p>Natale e ogni occasione: chi, cosa, quanto, chi se ne occupa.</p>
-      <div class="stato" id="statoRegali"></div>
-    </a>
-  </div>
+  <div class="saluto"><h2 id="saluto">Ciao</h2><p>Le cose di casa, in comune.</p></div>
+  <div class="riquadri" id="riquadri"></div>
   <div class="azioni-home">
     <button type="button" class="btn" id="btnInvita">👥 Invita in famiglia</button>
+    <button type="button" class="btn" id="btnPersone">🧒 Componenti della famiglia</button>
   </div>
 </main>
 <script src="qr.js"></script>
 <script src="famiglia.js"></script>
+<script src="sezione.js"></script>
+<script src="reparti.js"></script>
+<script src="spesa.js"></script>
+<script src="menu.js"></script>
+<script src="scadenze.js"></script>
+<script src="compleanni.js"></script>
+<script src="spese.js"></script>
+<script src="scuola.js"></script>
+<script src="salute.js"></script>
+<script src="casa.js"></script>
+<script src="numeri.js"></script>
+<script src="viaggi.js"></script>
+<script src="avvisi.js"></script>
 <script>
 Fam.avvio(function () {
-  var R = Fam.raccolta('regali'), L = Fam.raccolta('liste');
+  var h = Fam.h;
+  var RIQ = [
+    ['regali', '🎄', 'Regali', 'Natale e ogni occasione: idee, chi compra, quanto si spende.', '#b51f2a'],
+    ['spesa', '🛒', 'Spesa', 'La lista da spuntare al supermercato, in tempo reale.', '#3d7a4f'],
+    ['menu', '🍝', 'Menù', 'Pranzi e cene della settimana; gli ingredienti vanno alla spesa.', '#c0651b'],
+    ['scadenze', '📅', 'Scadenze', 'Bollo, revisione, documenti, bollette, tasse.', '#3c4f9a'],
+    ['compleanni', '🎂', 'Compleanni', 'Compleanni, onomastici, anniversari.', '#b13d6c'],
+    ['spese', '💶', 'Spese', 'Chi ha pagato cosa, per categoria e per mese.', '#1f7a72'],
+    ['scuola', '🎒', 'Scuola e attività', 'Compiti, verifiche, colloqui, sport, cosa portare.', '#2f6db5'],
+    ['salute', '🩺', 'Salute', 'Visite, esami, vaccini e terapie di ognuno.', '#c2414b'],
+    ['casa', '🔧', 'Casa', 'Manutenzioni: caldaia, condizionatori, auto…', '#b5582f'],
+    ['numeri', '📇', 'Numeri utili', 'Medico, idraulico, scuola, emergenze.', '#8a5a3c'],
+    ['viaggi', '✈️', 'Viaggi', 'La valigia da spuntare per ogni viaggio.', '#1d79a8'],
+    ['avvisi', '🔔', 'Avvisi', 'Il promemoria di ogni mattina su Telegram.', '#6a4bb3']
+  ];
+  var RACCOLTE = ['regali', 'liste', 'spesa', 'menu', 'scadenze', 'compleanni', 'spese', 'scuola', 'salute', 'casa', 'numeri', 'viaggi', 'valigia', 'impostazioni', 'persone'];
+  RACCOLTE.forEach(function (n) { Fam.raccolta(n); });
   Fam.pillolaStato(document.getElementById('pillola'));
+  var box = document.getElementById('riquadri'), stati = {};
+  RIQ.forEach(function (q) {
+    stati[q[0]] = h('div', { class: 'stato' });
+    box.appendChild(h('a', { class: 'riquadro' + (q[0] === 'regali' ? ' natale' : ''), id: 'q-' + q[0], href: q[0] + '.html' + location.search + '#k=' + Fam.chiave, style: '--tinta:' + q[4] },
+      h('div', { class: 'ico', text: q[1] }), h('h2', { text: q[2] }), h('p', { text: q[3] }), stati[q[0]]));
+  });
+  function statoRegali() {
+    var me = Fam.io();
+    var l = Fam.raccolta('liste').tutte().filter(function (l) { return !l.eliminato && l.titolo; })
+      .sort(function (a, b) { return String(b.data || '').localeCompare(String(a.data || '')); })[0];
+    if (!l) return '';
+    var r = Fam.raccolta('regali').tutte().filter(function (r) { return r.lista === l.id && !r.eliminato && r.nascostoA !== me; });
+    var f = r.filter(function (x) { return x.fatto; }).length;
+    return l.titolo + ': ' + f + (f === 1 ? ' fatto' : ' fatti') + ' su ' + r.length;
+  }
   function disegna() {
     var ora = new Date().getHours();
     document.getElementById('saluto').textContent = (ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera') + (Fam.io() ? ', ' + Fam.io() : '');
     document.getElementById('chi').textContent = '👤 ' + (Fam.io() || 'Chi sei?');
-    var liste = L.tutte().filter(function (l) { return !l.eliminato && l.titolo; })
-      .sort(function (a, b) { return String(b.data || '').localeCompare(String(a.data || '')); });
-    var l = liste[0], me = Fam.io();
-    if (!l) { document.getElementById('statoRegali').textContent = ''; return; }
-    var righe = R.tutte().filter(function (r) { return r.lista === l.id && !r.eliminato && r.nascostoA !== me; });
-    var fatti = righe.filter(function (r) { return r.fatto; }).length;
-    document.getElementById('statoRegali').textContent = l.titolo + ': ' + fatti + (fatti === 1 ? ' fatto' : ' fatti') + ' su ' + righe.length;
+    RIQ.forEach(function (q) {
+      var t = '';
+      try {
+        if (q[0] === 'regali') t = statoRegali();
+        else { var d = Sezione.definite[q[0]]; if (d && d.home) t = d.home(Sezione.righeAttive(d)); }
+      } catch (e) { t = ''; }
+      stati[q[0]].textContent = t || '';
+      document.getElementById('q-' + q[0]).classList.toggle('urgente', /scadut|ritardo|urgent/i.test(t));
+    });
   }
   document.getElementById('chi').addEventListener('click', function () { Fam.chiediChiSei(false, disegna); });
   document.getElementById('btnInvita').addEventListener('click', Fam.invita);
-  // il link verso i regali porta con sé la chiave, così funziona anche da «Aggiungi a Home»
-  document.getElementById('vaiRegali').href = 'regali.html' + location.search + '#k=' + Fam.chiave;
-  R.su(disegna); L.su(disegna); Fam.su(function (t) { if (t === 'io') disegna(); });
+  document.getElementById('btnPersone').addEventListener('click', function () { Fam.gestisciPersone(disegna); });
+  RACCOLTE.forEach(function (n) { Fam.raccolta(n).su(function (t) { if (t !== 'fine') disegna(); }); });
+  Fam.su(function (t) { if (t === 'io') disegna(); });
   disegna();
-  R.sincronizza(); L.sincronizza();
+  Fam.sincronizzaTutto();
 });
 </script>
 </body>

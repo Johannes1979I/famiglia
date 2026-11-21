@@ -118,9 +118,11 @@ body.tema-natale .btn.primario { background: var(--rosso); border-color: var(--r
 .riga .c-fiocco button:hover, .riga .c-menu button:hover { background: var(--primario-chiaro); opacity: 1; }
 .riga.fatto { background: linear-gradient(90deg, var(--primario-chiaro), transparent 60%); }
 .riga.fatto .nome { color: var(--primario); }
-.riga .segni { grid-column: 2 / -1; font-size: .75rem; color: var(--tenue); margin-top: -6px; padding-left: 7px; display: flex; gap: 12px; flex-wrap: wrap; }
+.riga .segni { grid-column: 2 / -1; font-size: .75rem; color: var(--tenue); margin-top: -6px; padding-left: 7px; display: flex; gap: 6px 12px; flex-wrap: wrap; align-items: center; }
 .riga .segni:empty { display: none; }
 .riga .segni .nasc { color: var(--oro); }
+.riga .segni a.link-proposta { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--primario-chiaro); color: var(--primario); text-decoration: none; font-weight: 600; font-size: .8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.riga .segni a.link-proposta:hover { background: var(--primario); color: var(--su-primario); }
 .riga.lampo { animation: lampo 2.5s ease-out; }
 @keyframes lampo { 0% { background: var(--oro-chiaro); } 100% { background: transparent; } }
 @media (min-width: 861px) {

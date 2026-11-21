@@ -123,3 +123,135 @@ dialog.dlg::backdrop { background: rgba(10, 20, 15, .45); }
 .riquadro .ico { font-size: 2rem; }
 .riquadro h2 { margin: 6px 0 4px; font-size: 1.1rem; }
 .riquadro p { margin: 0; color: var(--tenue); font-size: .9rem; }
+
+/* ===================== colori delle sezioni ===================== */
+/* Ogni pagina mette sul body la sua classe: la tinta guida testata,
+   pulsanti e accenti; chiaro e scuro si ricavano da lei. */
+body[class*="sez-"] {
+  --primario: var(--tinta);
+  --primario-chiaro: color-mix(in srgb, var(--tinta) 13%, var(--carta));
+  --testata: linear-gradient(135deg, color-mix(in srgb, var(--tinta) 70%, #000), var(--tinta) 65%, color-mix(in srgb, var(--tinta) 85%, #fff));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body[class*="sez-"] {
+    --primario: color-mix(in srgb, var(--tinta) 55%, #fff);
+    --primario-chiaro: color-mix(in srgb, var(--tinta) 22%, var(--carta));
+    --testata: linear-gradient(135deg, color-mix(in srgb, var(--tinta) 45%, #000), color-mix(in srgb, var(--tinta) 70%, #000));
+  }
+}
+.sez-spesa { --tinta: #3d7a4f; }
+.sez-menu { --tinta: #c0651b; }
+.sez-scadenze { --tinta: #3c4f9a; }
+.sez-compleanni { --tinta: #b13d6c; }
+.sez-spese { --tinta: #1f7a72; }
+.sez-scuola { --tinta: #2f6db5; }
+.sez-salute { --tinta: #c2414b; }
+.sez-casa { --tinta: #b5582f; }
+.sez-viaggi { --tinta: #1d79a8; }
+.sez-avvisi { --tinta: #6a4bb3; }
+
+/* ===================== elementi comuni delle sezioni ===================== */
+.riepilogo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.cifra { position: relative; background: var(--carta); border: 1px solid var(--bordo); border-top: 3px solid var(--primario); border-radius: var(--raggio); padding: 10px 14px; box-shadow: var(--ombra); }
+.cifra b { display: block; font-size: 1.4rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.cifra span { font-size: .8rem; color: var(--tenue); }
+.cifra .ico { position: absolute; top: 8px; right: 10px; font-size: 1.1rem; font-style: normal; opacity: .85; }
+.cifra.urgente { border-top-color: var(--rosso); } .cifra.urgente b { color: var(--rosso); }
+.cifra.attenzione { border-top-color: var(--oro); }
+.cifra.ok b { color: var(--primario); }
+.barra { height: 6px; background: var(--primario-chiaro); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.barra i { display: block; height: 100%; background: var(--primario); width: 0; transition: width .4s; }
+.barra.sopra i { background: var(--rosso); }
+.strumenti { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.strumenti .cerca { flex: 1 1 180px; max-width: 300px; }
+.filtri { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--bordo); background: var(--carta); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: .88rem; }
+.chip[aria-pressed="true"] { background: var(--primario); border-color: var(--primario); color: var(--su-primario); }
+.chip .n { opacity: .7; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.spinta { margin-left: auto; display: flex; gap: 8px; }
+.menu-pop { position: relative; }
+.menu-pop .tendina { position: absolute; right: 0; top: calc(100% + 6px); background: var(--carta); border: 1px solid var(--bordo); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,.16); padding: 6px; min-width: 240px; z-index: 30; display: flex; flex-direction: column; }
+.menu-pop .tendina button { text-align: left; border: 0; background: none; padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+.menu-pop .tendina button:hover { background: var(--primario-chiaro); }
+.selettore-lista { font-weight: 600; width: auto; max-width: 260px; }
+.barra-contesto { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; padding: 10px 12px; background: var(--primario-chiaro); border-radius: var(--raggio); }
+.barra-contesto[hidden] { display: none; }
+.rapida { display: flex; gap: 8px; margin-bottom: 12px; }
+.rapida input { flex: 1; font-size: 1.05rem; padding: 10px 12px; border-radius: 12px; }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.voci { display: flex; flex-direction: column; gap: 8px; }
+.gruppo { display: flex; flex-direction: column; gap: 8px; }
+.gruppo-titolo { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--primario); margin: 12px 2px 0; }
+.voce { display: flex; align-items: center; gap: 10px; background: var(--carta); border: 1px solid var(--bordo); border-left: 4px solid var(--primario-chiaro); border-radius: var(--raggio); padding: 6px 10px; box-shadow: var(--ombra); }
+.voce-spunta { display: flex; padding: 6px 2px; cursor: pointer; }
+.voce-spunta input { width: 22px; height: 22px; accent-color: var(--primario); cursor: pointer; margin: 0; }
+.voce-corpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; background: none; border: 0; padding: 6px 2px; cursor: pointer; }
+.voce-titolo { font-weight: 600; overflow-wrap: anywhere; }
+.voce-sotto { font-size: .86rem; color: var(--tenue); overflow-wrap: anywhere; }
+.voce-mod { font-size: .74rem; color: var(--tenue); }
+.voce.fatta { opacity: .6; } .voce.fatta .voce-titolo { text-decoration: line-through; }
+.voce.st-urgente { border-left-color: var(--rosso); }
+.voce.st-attenzione { border-left-color: var(--oro); }
+.voce.st-ok { border-left-color: var(--primario); }
+.badge { flex: 0 0 auto; font-size: .76rem; font-weight: 600; border-radius: 999px; padding: 3px 9px; background: var(--primario-chiaro); color: var(--primario); white-space: nowrap; }
+.badge.urgente { background: var(--rosso-chiaro); color: var(--rosso); }
+.badge.attenzione { background: var(--oro-chiaro); color: var(--oro); }
+.badge.tenue { background: none; color: var(--tenue); font-weight: 400; }
+.voce .azione-voce { border: 0; background: var(--primario-chiaro); color: var(--primario); border-radius: 8px; padding: 6px 9px; cursor: pointer; font-size: .82rem; white-space: nowrap; }
+.voce a.azione-voce { text-decoration: none; }
+.vuoto { padding: 28px; text-align: center; color: var(--tenue); background: var(--carta); border: 1px dashed var(--bordo); border-radius: var(--raggio); }
+.piede-pagina { margin-top: 12px; font-size: .82rem; color: var(--tenue); }
+
+.griglia-campi { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.griglia-campi .campo { grid-column: 1 / -1; }
+.griglia-campi .campo.mezzo { grid-column: auto; }
+.campo small { display: block; margin-top: 3px; }
+.campo-spunta { display: flex !important; align-items: center; gap: 8px; }
+.campo-spunta span { margin: 0 !important; font-size: .95rem !important; color: inherit !important; }
+.campo-spunta input { width: 20px; height: 20px; accent-color: var(--primario); }
+.riga-persona { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--bordo); }
+
+@media (max-width: 700px) {
+  .pagina { padding: 12px; }
+  .riepilogo { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .cifra { padding: 7px 9px; } .cifra b { font-size: 1.1rem; } .cifra span { font-size: .72rem; display: block; line-height: 1.2; }
+  .spinta { margin-left: 0; width: 100%; } .spinta .btn.primario { flex: 1; }
+  .strumenti .cerca { max-width: none; }
+  .griglia-campi { grid-template-columns: 1fr; }
+  .testa .pillola { font-size: 0; padding: 8px; } .testa .pillola::before { margin: 0; width: 10px; height: 10px; }
+}
+
+/* stampa comune */
+#stampa { display: none; }
+@media print {
+  body { background: #fff !important; color: #000; }
+  body > *:not(#stampa) { display: none !important; }
+  #stampa { display: block !important; font-size: 11pt; }
+  #stampa h1 { font-size: 16pt; margin: 0 0 4pt; } #stampa h2 { font-size: 12pt; margin: 10pt 0 2pt; }
+  #stampa ul { margin: 0; padding-left: 14pt; } #stampa li { margin: 2pt 0; break-inside: avoid; }
+}
+
+/* ===================== menù della settimana ===================== */
+.titolo-settimana { font-size: 1rem; }
+.menu-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.menu-giorno { background: var(--carta); border: 1px solid var(--bordo); border-top: 3px solid var(--primario-chiaro); border-radius: var(--raggio); padding: 10px; box-shadow: var(--ombra); display: flex; flex-direction: column; gap: 8px; }
+.menu-giorno.oggi { border-top-color: var(--primario); background: linear-gradient(180deg, var(--primario-chiaro), var(--carta) 60px); }
+.menu-data { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.menu-pasto { display: block; }
+.menu-pasto span { display: block; font-size: .74rem; color: var(--tenue); margin-bottom: 2px; }
+.menu-ingredienti { background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 14px; box-shadow: var(--ombra); }
+.menu-ingredienti h3 { margin: 0 0 8px; font-size: 1rem; }
+
+/* ===================== schede di testo (avvisi) ===================== */
+.scheda { background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--ombra); max-width: 760px; }
+.scheda h2 { margin: 0 0 6px; font-size: 1.15rem; color: var(--primario); }
+.scheda h3 { margin: 0 0 8px; font-size: 1rem; }
+.scheda p { margin: 6px 0; }
+.avviso-box { background: var(--oro-chiaro); border-left: 3px solid var(--oro); padding: 8px 12px; border-radius: 8px; }
+
+/* ===================== home ===================== */
+.riquadro { position: relative; border-top: 4px solid var(--tinta, var(--primario)); }
+.riquadro .stato { margin-top: 10px; font-size: .85rem; color: var(--tinta, var(--primario)); font-weight: 600; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .riquadro .stato { color: color-mix(in srgb, var(--tinta, var(--primario)) 55%, #fff); } }
+.riquadro.urgente::after { content: ""; position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--rosso); box-shadow: 0 0 0 3px var(--rosso-chiaro); }
