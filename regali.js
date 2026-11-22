@@ -41,8 +41,32 @@
   /* Tutti i link scritti nelle proposte, nel regalo scelto, nel «da fare»,
      nelle note e nel campo link: diventano pulsanti cliccabili sotto la riga. */
   var RE_LINK = /(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+  function nomeSito(url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return 'link'; } }
+  function eAmazon(url) { return /(^|[./])(amazon\.[a-z.]+|amzn\.(to|eu|com)|a\.co)\//i.test(url + '/'); }
+  function cercaAmazon(q) { return 'https://www.amazon.it/s?k=' + encodeURIComponent(q); }
+  /* i link salvati uno per uno (campo «links», JSON: [{u, t, da, il}]) */
+  function linkSalvati(r) {
+    try { var a = JSON.parse(r && r.links || '[]'); return Array.isArray(a) ? a.filter(function (l) { return l && l.u; }) : []; } catch (e) { return []; }
+  }
+  /* da un testo condiviso («Guarda questo prodotto: Nome https://amzn.eu/d/…»)
+     tira fuori il link e un titolo leggibile */
+  function estraiLink(testo) {
+    RE_LINK.lastIndex = 0;
+    var m = String(testo || '').match(RE_LINK);
+    if (!m) return null;
+    var grezzo = m[0], u = grezzo.replace(/[).,;:!?»]+$/, '');
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    var t = String(testo).replace(grezzo, ' ').replace(/\s+/g, ' ')
+      .replace(/^(guarda|dai un'occhiata|ho trovato|condivido|check out|look at)[^:]*:\s*/i, '')
+      .replace(/[\s:–\-|]+$/, '').replace(/^["«“]|["»”]$/g, '').trim();
+    return { u: u, t: t.slice(0, 140) };
+  }
   function linkDi(r) {
     var visti = {}, out = [];
+    linkSalvati(r).forEach(function (l) {
+      if (visti[l.u]) return; visti[l.u] = 1;
+      out.push({ url: l.u, nome: l.t || nomeSito(l.u), amazon: eAmazon(l.u), salvato: true });
+    });
     ['idee', 'regalo', 'dafare', 'note', 'link'].forEach(function (k) {
       var t = String(r[k] || '');
       if (k === 'link' && t && !RE_LINK.test(t)) t = 'https://' + t;
@@ -53,7 +77,7 @@
         try { var nome = new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return; }
         if (visti[url]) return; visti[url] = 1;
         var stessi = out.filter(function (x) { return x.nome.indexOf(nome) === 0; }).length;
-        out.push({ url: url, nome: stessi ? nome + ' (' + (stessi + 1) + ')' : nome });
+        out.push({ url: url, nome: stessi ? nome + ' (' + (stessi + 1) + ')' : nome, amazon: eAmazon(url) });
       });
     });
     return out;
@@ -194,8 +218,11 @@
       svuota(n.segni);
       if (r.nascostoA) n.segni.appendChild(h('span', { class: 'nasc', text: '🙈 nascosto a ' + r.nascostoA }));
       linkDi(r).forEach(function (l) {
-        n.segni.appendChild(h('a', { class: 'link-proposta', href: l.url, target: '_blank', rel: 'noopener noreferrer', title: l.url, text: '🔗 ' + l.nome }));
+        var nome = l.nome.length > 42 ? l.nome.slice(0, 40) + '…' : l.nome;
+        n.segni.appendChild(h('a', { class: 'link-proposta' + (l.amazon ? ' amazon' : ''), href: l.url, target: '_blank', rel: 'noopener noreferrer', title: l.url, text: (l.amazon ? '🛒 ' : '🔗 ') + nome }));
       });
+      n.segni.appendChild(h('button', { type: 'button', class: 'azione-riga', title: 'Cerca un regalo su Amazon', text: '🛒 Amazon', onclick: function () { apriAmazon(r.id); } }));
+      n.segni.appendChild(h('button', { type: 'button', class: 'azione-riga', title: 'Aggiungi un link', text: '＋ link', onclick: function () { chiediLink(r.id); } }));
       if (piena(r.note)) n.segni.appendChild(h('span', { text: '📝 ' + String(r.note).slice(0, 80) + (String(r.note).length > 80 ? '…' : '') }));
       if (r.modDa && r.modDa !== Fam.io()) n.segni.appendChild(h('span', { text: '✎ ' + r.modDa + ', ' + Fam.quando(r.modIl) }));
     }
@@ -309,7 +336,42 @@
       var r = R.prendi(id); if (!r) return;
       var salva = function (k) { return function (e) { cambia(id, k, e.target.value); disegna(); }; };
       var nome = h('input', { type: 'text', value: r.nome || '', maxlength: 60, oninput: salva('nome') });
-      var link = h('input', { type: 'url', value: r.link || '', placeholder: 'https://… (negozio, Amazon, foto)', oninput: salva('link') });
+      // il vecchio campo «link» singolo confluisce nell'elenco
+      if (piena(r.link) && !linkSalvati(r).some(function (l) { return l.u === r.link; })) {
+        var vecchio = estraiLink(r.link) || { u: r.link, t: '' };
+        R.imposta(id, { links: JSON.stringify(linkSalvati(r).concat([{ u: vecchio.u, t: vecchio.t || '' }])), link: null }, 'links');
+        r = R.prendi(id);
+      }
+      var link = h('div', { class: 'elenco-link' });
+      function disegnaLink() {
+        svuota(link);
+        var ls = linkSalvati(R.prendi(id));
+        if (!ls.length) link.appendChild(h('p', { class: 'tenue piccolo', style: 'margin:0 0 6px', text: 'Nessun link salvato. Incollane uno qui sotto o cerca su Amazon.' }));
+        ls.forEach(function (l, i) {
+          var tit = h('input', { type: 'text', value: l.t || '', placeholder: nomeSito(l.u), maxlength: 140, 'aria-label': 'Nome del link' });
+          tit.addEventListener('change', function () {
+            var a = linkSalvati(R.prendi(id)); if (!a[i]) return;
+            a[i].t = tit.value.trim(); cambia(id, 'links', JSON.stringify(a)); disegna();
+          });
+          link.appendChild(h('div', { class: 'link-voce' },
+            h('span', { class: 'link-ico', text: eAmazon(l.u) ? '🛒' : '🔗' }), tit,
+            h('a', { class: 'btn piccolo', href: l.u, target: '_blank', rel: 'noopener noreferrer', text: 'Apri' }),
+            h('button', { type: 'button', class: 'btn piccolo pericolo', 'aria-label': 'Togli il link', text: '✕', onclick: function () {
+              var a = linkSalvati(R.prendi(id)); a.splice(i, 1); cambia(id, 'links', JSON.stringify(a)); disegnaLink(); disegna();
+            } })));
+        });
+        var nuovo = h('input', { type: 'text', placeholder: 'Incolla un link (Amazon, negozio, foto)…', 'aria-label': 'Nuovo link' });
+        link.appendChild(h('form', { class: 'riga-form', style: 'margin-top:6px', onsubmit: function (e) {
+          e.preventDefault();
+          if (aggiungiLink(id, nuovo.value, false)) { nuovo.value = ''; disegnaLink(); }
+        } }, nuovo, h('button', { class: 'btn', text: 'Aggiungi' })));
+        link.appendChild(h('div', { class: 'scelte', style: 'margin:6px 0 0' },
+          h('button', { type: 'button', class: 'btn piccolo', text: '🛒 Cerca su Amazon', onclick: function () { apriAmazon(id); } }),
+          navigator.clipboard && navigator.clipboard.readText ? h('button', { type: 'button', class: 'btn piccolo', text: '📋 Incolla dagli appunti', onclick: function () {
+            navigator.clipboard.readText().then(function (t) { if (aggiungiLink(id, t, false)) disegnaLink(); }, function () { nuovo.focus(); Fam.avviso('Incolla a mano nel campo qui sopra'); });
+          } }) : null));
+      }
+      disegnaLink();
       var note = h('textarea', { rows: 4, placeholder: 'Taglia, colore, dove l\'abbiamo nascosto, scontrino…', oninput: salva('note') });
       note.value = r.note || '';
       var nasc = h('select', { onchange: salva('nascostoA') },
@@ -330,7 +392,7 @@
       if (r.modDa) info.push('Ultima modifica di ' + r.modDa + ', ' + Fam.quando(r.modIl) + (r.modCampo ? ' (' + (ETICHETTE[r.modCampo] || r.modCampo) + ')' : ''));
       Fam.dialogo('Dettagli · ' + (r.nome || ''), [
         h('label', { class: 'campo' }, h('span', { text: 'Nome' }), nome),
-        h('label', { class: 'campo' }, h('span', { text: 'Link (dove comprarlo)' }), link),
+        h('div', { class: 'campo' }, h('span', { text: 'Link delle proposte (quanti vuoi)' }), link),
         h('label', { class: 'campo' }, h('span', { text: 'Note' }), note),
         h('label', { class: 'campo' }, h('span', { text: 'Riservatezza' }), nasc,
           h('span', { class: 'tenue piccolo', style: 'margin-top:4px', text: 'Utile se la persona della lista usa anche lei l\'app: la riga sparisce dal suo telefono. È discrezione, non una cassaforte.' })),
@@ -344,6 +406,128 @@
         { testo: 'Fatto', primario: true }
       ], { allaChiusura: disegna });
     }
+
+    /* -------------------------------------------------- link e Amazon */
+    var CHIAVE_ATTESA = 'fam_attesa_amazon_' + Fam.chiave.slice(0, 10);
+
+    // aggiunge un link (anche un testo condiviso che lo contiene) alla persona
+    function aggiungiLink(id, testo, comeRegalo) {
+      var x = estraiLink(testo);
+      if (!x) { Fam.avviso('Non trovo un link in quello che hai incollato', { tipo: 'ko' }); return false; }
+      var r = R.prendi(id); if (!r) return false;
+      var a = linkSalvati(r);
+      if (a.some(function (l) { return l.u === x.u; })) { Fam.avviso('Questo link c\'era già'); return true; }
+      a.push({ u: x.u, t: x.t || '', da: Fam.io(), il: new Date().toISOString() });
+      var campi = { links: JSON.stringify(a) };
+      if (comeRegalo && x.t && !piena(r.regalo)) campi.regalo = x.t;
+      trattieni[id] = true;
+      R.imposta(id, campi, 'links');
+      disegna();
+      var n = nodi[id];
+      if (n) { n.el.classList.remove('lampo'); void n.el.offsetWidth; n.el.classList.add('lampo'); n.el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      Fam.avviso((eAmazon(x.u) ? '🛒 ' : '🔗 ') + 'Link aggiunto a ' + (r.nome || '') + (campi.regalo ? ' e segnato come regalo scelto' : ''));
+      return true;
+    }
+    function chiediLink(id) {
+      var r = R.prendi(id); if (!r) return;
+      var campo = h('input', { type: 'text', placeholder: 'https://…', 'aria-label': 'Link' });
+      var regalo = h('input', { type: 'checkbox', checked: !piena(r.regalo) });
+      Fam.dialogo('Link per ' + (r.nome || ''), [
+        h('p', { class: 'tenue', text: 'Incolla il link della proposta: puoi aggiungerne quanti vuoi.' }), campo,
+        h('label', { class: 'campo campo-spunta', style: 'margin-top:10px' }, regalo, h('span', { text: 'È il regalo scelto (ne scrivo il nome in «Regalo scelto»)' }))
+      ], [
+        navigator.clipboard && navigator.clipboard.readText ? { testo: '📋 Incolla', azione: function () {
+          navigator.clipboard.readText().then(function (t) { campo.value = t; }, function () { Fam.avviso('Incolla a mano nel campo'); });
+          return false;
+        } } : null,
+        { testo: 'Annulla' },
+        { testo: 'Aggiungi', primario: true, azione: function () { return aggiungiLink(id, campo.value, regalo.checked) ? undefined : false; } }
+      ].filter(Boolean));
+      setTimeout(function () { campo.focus(); }, 50);
+    }
+    // apre Amazon già sulla ricerca giusta e si ricorda per chi stai cercando
+    function apriAmazon(id) {
+      var r = R.prendi(id); if (!r) return;
+      var idea = String(r.regalo || r.idee || '').replace(RE_LINK, ' ').split(/[\n,;]/).map(function (s) { return s.trim(); }).filter(Boolean)[0] || '';
+      RE_LINK.lastIndex = 0;
+      var q = h('input', { type: 'search', value: idea, placeholder: 'Es. lego technic, profumo, libro di cucina', 'aria-label': 'Cosa cerchi' });
+      var d = Fam.dialogo('🛒 Amazon · ' + (r.nome || ''), [
+        h('p', { class: 'tenue', text: 'Cosa cerchi?' }), q,
+        h('p', { class: 'tenue piccolo', style: 'margin-top:10px', text: 'Quando hai scelto: dall\'app Amazon premi «Condividi» e scegli «Famiglia» (app Android), oppure copia il link e torna qui: te lo chiedo io e lo metto su ' + (r.nome || '') + '.' })
+      ], [
+        { testo: 'Annulla' },
+        { testo: 'Apri Amazon', primario: true, azione: function () {
+          Fam.ls(CHIAVE_ATTESA, JSON.stringify({ id: id, nome: r.nome, il: Date.now() }));
+          window.open(q.value.trim() ? cercaAmazon(q.value.trim()) : 'https://www.amazon.it/', '_blank', 'noopener');
+        } }
+      ]);
+      d.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); d.querySelector('.dlg-piede .btn.primario').click(); } });
+      setTimeout(function () { q.focus(); q.select(); }, 50);
+    }
+    function inAttesa() {
+      var a = Fam.lsJson(CHIAVE_ATTESA, null);
+      if (!a || !a.id || Date.now() - a.il > 3 * 3600e3 || !R.prendi(a.id)) return null;
+      return a;
+    }
+    // tornando da Amazon: «Hai scelto su Amazon per X? Incolla qui il link»
+    function mostraRitorno() {
+      var a = inAttesa(), box = $('bannerAmazon');
+      if (!a) { box.hidden = true; return; }
+      if (!box.hidden) return;
+      svuota(box);
+      var campo = h('input', { type: 'text', placeholder: 'Incolla qui il link del prodotto', 'aria-label': 'Link da Amazon' });
+      var chiudi = function () { Fam.ls(CHIAVE_ATTESA, null); box.hidden = true; };
+      box.appendChild(h('div', { class: 'ritorno-testo' }, h('b', { text: '🛒 Hai scelto su Amazon per ' + a.nome + '?' }), ' Incolla il link e lo aggiungo come regalo scelto.'));
+      box.appendChild(h('form', { class: 'riga-form', onsubmit: function (e) {
+        e.preventDefault(); if (aggiungiLink(a.id, campo.value, true)) chiudi();
+      } }, campo,
+        navigator.clipboard && navigator.clipboard.readText ? h('button', { type: 'button', class: 'btn', text: '📋 Incolla', onclick: function () {
+          navigator.clipboard.readText().then(function (t) { campo.value = t; if (estraiLink(t)) { aggiungiLink(a.id, t, true); chiudi(); } }, function () { campo.focus(); });
+        } }) : null,
+        h('button', { class: 'btn primario', text: 'Aggiungi' }),
+        h('button', { type: 'button', class: 'btn', 'aria-label': 'Non ora', text: '✕', onclick: chiudi })));
+      box.hidden = false;
+    }
+    // un link arrivato da «Condividi → Famiglia» (app Android): a chi lo diamo?
+    function arrivoCondiviso(testo) {
+      var x = estraiLink(testo);
+      if (!x) { Fam.avviso('Nel testo condiviso non c\'è un link', { tipo: 'ko' }); return; }
+      var a = inAttesa(), regalo = h('input', { type: 'checkbox', checked: true });
+      var filtro = h('input', { type: 'search', placeholder: 'Cerca la persona…', 'aria-label': 'Cerca la persona' });
+      var elenco = h('div', { class: 'scelte' }), d;
+      function riempi() {
+        svuota(elenco);
+        var q = semplice(filtro.value);
+        righeLista().filter(function (r) { return !q || semplice(r.nome).indexOf(q) >= 0; })
+          .sort(function (x1, x2) { return (a && x2.id === a.id ? 1 : 0) - (a && x1.id === a.id ? 1 : 0); })
+          .forEach(function (r) {
+            elenco.appendChild(h('button', { type: 'button', class: 'btn scelta' + (a && r.id === a.id ? ' primario' : ''), text: (r.fatto ? '✓ ' : '') + r.nome, onclick: function () {
+              d.close(); aggiungiLink(r.id, x.u + (x.t ? ' ' + x.t : ''), regalo.checked);
+              if (a) Fam.ls(CHIAVE_ATTESA, null);
+              $('bannerAmazon').hidden = true;
+            } }));
+          });
+      }
+      filtro.addEventListener('input', riempi);
+      d = Fam.dialogo('A chi aggiungi questo link?', [
+        h('div', { class: 'link-arrivato' }, h('b', { text: (eAmazon(x.u) ? '🛒 ' : '🔗 ') + (x.t || nomeSito(x.u)) }), h('div', { class: 'tenue piccolo', text: nomeSito(x.u) })),
+        h('label', { class: 'campo campo-spunta', style: 'margin:10px 0' }, regalo, h('span', { text: 'È il regalo scelto (ne scrivo il nome in «Regalo scelto» se è vuoto)' })),
+        righeLista().length > 8 ? filtro : null, elenco
+      ], [{ testo: 'Annulla' }], { largo: true });
+      riempi();
+    }
+    function controllaCondivisione() {
+      var m = /[#&]condividi=([^&]*)/.exec(location.hash);
+      if (!m) return;
+      var testo = decodeURIComponent(m[1]);
+      Fam.scriviHash();
+      arrivoCondiviso(testo);
+    }
+    window.addEventListener('hashchange', controllaCondivisione);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) mostraRitorno(); });
+    window.addEventListener('focus', mostraRitorno);
+    // l'app Android chiama questa funzione quando qualcuno condivide un link verso «Famiglia»
+    window.FamigliaCondividi = arrivoCondiviso;
 
     /* -------------------------------------------------- azioni del menù */
     var AZIONI = {
@@ -379,7 +563,7 @@
         var righe = [['Fatto', 'Nome', 'Proposte / idee', 'Regalo scelto', 'Da fare', 'Budget', 'Speso', 'A cura di', 'Incartato', 'Link', 'Note', 'Ultima modifica']];
         visibili().forEach(function (r) {
           righe.push([r.fatto ? 'sì' : 'no', r.nome, r.idee, r.regalo, r.dafare, fmtNum(r.budget), fmtNum(r.speso), r.chi,
-            r.incartato ? 'sì' : 'no', r.link, r.note, r.modDa ? r.modDa + ' ' + Fam.quando(r.modIl) : '']);
+            r.incartato ? 'sì' : 'no', linkDi(r).map(function (l) { return l.url; }).join(' '), r.note, r.modDa ? r.modDa + ' ' + Fam.quando(r.modIl) : '']);
         });
         var testo = '﻿' + righe.map(function (r) { return r.map(cel).join(';'); }).join('\r\n');
         var a = h('a', { href: URL.createObjectURL(new Blob([testo], { type: 'text/csv;charset=utf-8' })),
@@ -463,6 +647,7 @@
     $('lista').addEventListener('change', function () { scegliLista(this.value); });
     $('chi').addEventListener('click', function () { Fam.chiediChiSei(false, disegna); });
     $('btnInvita').addEventListener('click', Fam.invita);
+    $('btnAmazon').addEventListener('click', function () { window.open('https://www.amazon.it/', '_blank', 'noopener'); });
     var tendina = $('tendina'), btnAltro = $('btnAltro');
     btnAltro.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -523,6 +708,8 @@
         Fam.scriviHash();
       }
       disegna();
+      if (p.condividi) arrivoCondiviso(p.condividi);
+      else mostraRitorno();
     });
   });
 })();

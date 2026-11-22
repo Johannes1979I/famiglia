@@ -122,6 +122,17 @@ body.tema-natale .btn.primario { background: var(--rosso); border-color: var(--r
 .riga .segni:empty { display: none; }
 .riga .segni .nasc { color: var(--oro); }
 .riga .segni a.link-proposta { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--primario-chiaro); color: var(--primario); text-decoration: none; font-weight: 600; font-size: .8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.riga .segni a.link-proposta.amazon { background: #fff3dd; color: #8a4b00; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .riga .segni a.link-proposta.amazon { background: #3a2a10; color: #ffcf80; } }
+.riga .segni .azione-riga { border: 1px dashed var(--bordo); background: none; color: var(--tenue); border-radius: 999px; padding: 2px 9px; font-size: .76rem; cursor: pointer; }
+.riga .segni .azione-riga:hover { border-color: var(--primario); color: var(--primario); }
+.banner.ritorno { background: #fff3dd; border-color: #e0a030; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .banner.ritorno { background: #3a2a10; } }
+.banner.ritorno .ritorno-testo { margin-bottom: 8px; }
+.elenco-link .link-voce { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.elenco-link .link-voce input { flex: 1; min-width: 0; }
+.elenco-link .link-ico { width: 22px; text-align: center; }
+.link-arrivato { background: var(--primario-chiaro); border-radius: 10px; padding: 10px 12px; overflow-wrap: anywhere; }
 .riga .segni a.link-proposta:hover { background: var(--primario); color: var(--su-primario); }
 .riga.lampo { animation: lampo 2.5s ease-out; }
 @keyframes lampo { 0% { background: var(--oro-chiaro); } 100% { background: transparent; } }
@@ -216,6 +227,8 @@ body.tema-natale .btn.primario { background: var(--rosso); border-color: var(--r
     (su Firebase manca la regola per la sezione «famiglia»).
   </div>
 
+  <div class="banner ritorno" id="bannerAmazon" hidden></div>
+
   <section class="riepilogo" id="riepilogo" aria-label="Riepilogo"></section>
 
   <div class="strumenti">
@@ -223,6 +236,7 @@ body.tema-natale .btn.primario { background: var(--rosso); border-color: var(--r
     <input type="search" id="cerca" class="cerca" placeholder="Cerca un nome o un'idea…" aria-label="Cerca">
     <div class="filtri" id="filtri" role="group" aria-label="Filtri"></div>
     <div class="spinta">
+      <button type="button" class="btn" id="btnAmazon" title="Apri Amazon">🛒 Amazon</button>
       <button type="button" class="btn" id="btnInvita">👥 Invita</button>
       <div class="menu-pop">
         <button type="button" class="btn" id="btnAltro" aria-haspopup="true" aria-expanded="false">Altro ▾</button>

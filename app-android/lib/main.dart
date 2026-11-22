@@ -45,7 +45,19 @@ class _PaginaState extends State<Pagina> {
   bool caricando = true;
   bool senzaRete = false;
 
+  static const canale = MethodChannel('famiglia/condividi');
+
   Uri get inizio => Uri.parse('${base}index.html${chiave.isEmpty ? '' : '#k=$chiave'}');
+
+  // un link condiviso verso l'app apre la pagina dei regali, che chiede a chi darlo
+  Uri condiviso(String testo) => Uri.parse(
+      '${base}regali.html#${chiave.isEmpty ? '' : 'k=$chiave&'}condividi=${Uri.encodeComponent(testo)}');
+
+  Future<void> arrivato(String testo) async {
+    if (testo.trim().isEmpty) return;
+    setState(() => senzaRete = false);
+    await c.loadRequest(condiviso(testo));
+  }
 
   bool interna(Uri u) =>
       u.host == 'johannes1979i.github.io' && u.path.startsWith('/famiglia');
@@ -76,7 +88,18 @@ class _PaginaState extends State<Pagina> {
           if (e.isForMainFrame ?? false) setState(() => senzaRete = true);
         },
       ))
-      ..loadRequest(inizio);
+      ;
+    canale.setMethodCallHandler((call) async {
+      if (call.method == 'nuovo' && call.arguments is String) await arrivato(call.arguments as String);
+      return null;
+    });
+    canale.invokeMethod<String>('iniziale').then((t) {
+      if (t != null && t.trim().isNotEmpty) {
+        c.loadRequest(condiviso(t));
+      } else {
+        c.loadRequest(inizio);
+      }
+    }, onError: (_) => c.loadRequest(inizio));
   }
 
   Future<void> riprova() async {
